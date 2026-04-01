@@ -1,8 +1,7 @@
-# Ignorar carpetas pesadas
+# Ignorar los node_modules
 node_modules/
 
-# Ignorar secretos (CRUCIAL)
 .env
 
-# Ignorar el frontend por ahora
+# Ignorar el frontend 
 frontend/
