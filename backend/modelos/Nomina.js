@@ -12,7 +12,6 @@ const Nomina = sequelize.define('Nomina', {
     type: DataTypes.INTEGER,
     field: 'id_empleado',
     allowNull: false,
-    references: { model: 'empleados', key: 'id_empleado' }
   },
   diasLaborados: {
     type: DataTypes.FLOAT,
@@ -37,5 +36,9 @@ const Nomina = sequelize.define('Nomina', {
   tableName: 'nominas',
   timestamps: false
 });
+
+
+
+
 
 module.exports = Nomina;

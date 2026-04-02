@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../database');
+const  sequelize  = require('../database');
 
-const empleados = sequelize.define('empleados',{
+const Empleado = sequelize.define('Empleado',{
   idEmpleado:{
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -16,15 +16,23 @@ const empleados = sequelize.define('empleados',{
     type: DataTypes.STRING,
     allowNull: false
   },
+  idSucursal:{
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'id_sucursal'
+  },
   sueldoBase:{
-    type: DataTypes.FLOAT,
+    type: DataTypes.DECIMAL(10,2),
     field: 'sueldo_base'
   }
 }, {
   tableName:'empleados',
   timestamps: false
 });
-module.exports = empleados;
+
+
+
+module.exports = Empleado;
 
 
 

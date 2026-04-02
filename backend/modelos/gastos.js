@@ -1,9 +1,3 @@
-//id_gast
-//concepto
-//monto
-//fecha
-//pagado sí o no
-//metodo_pago
 
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database');
@@ -22,6 +16,11 @@ const gastos = sequelize.define('gastos',{
   monto:{
     type: DataTypes.DECIMAL(10,2),
     allowNull: false
+  },
+  idSucursal:{
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'id_sucursal'
   },
   fecha:{
     type: DataTypes.DATEONLY,

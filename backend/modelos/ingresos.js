@@ -1,10 +1,3 @@
-//id_ingreso
-//fecha_inicio
-//hoy
-//cuenta
-//efectivo
-//tarjeta
-//total
 
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database');
@@ -24,16 +17,21 @@ const ingresos = sequelize.define('ingresos',{
     type: DataTypes.DATEONLY,
     field: 'fecha_fin'
   },
-  MontoCuenta:{
-    type: DataTypes.FLOAT,
+  montoCuenta:{
+    type: DataTypes.DECIMAL(10,2),
     field: 'cuenta'
   },
-  MontoEfectivo:{
-    type: DataTypes.FLOAT,
+  montoEfectivo:{
+    type: DataTypes.DECIMAL(10,2),
     field: 'efectivo'
   },
-  Total:{
-    type: DataTypes.FLOAT
+  total:{
+    type: DataTypes.DECIMAL(10,2)
+  },
+  idSucursal:{
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'id_sucursal'
   }
 }, {
   tableName: 'ingresos_semanales',
