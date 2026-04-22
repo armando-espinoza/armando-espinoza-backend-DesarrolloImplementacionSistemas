@@ -9,13 +9,9 @@ const ingresos = sequelize.define('ingresos',{
     autoIncrement: true,
     field: 'id_ingreso'
   },
-  fechaInicio:{
+  fecha:{
     type: DataTypes.DATEONLY,
-    field: 'fecha_inicio'
-  },
-  fechaFin:{
-    type: DataTypes.DATEONLY,
-    field: 'fecha_fin'
+    field: 'fecha'
   },
   montoCuenta:{
     type: DataTypes.DECIMAL(10,2),
