@@ -1,6 +1,9 @@
 const express = require('express'); 
 const bodyParser = require('body-parser'); 
 const cors = require('cors'); 
+require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 const sequelize = require('./database'); 
 const port = 1919;
 const app = express();
@@ -8,6 +11,7 @@ const Empleado = require ('./modelos/empleados');
 const Nomina = require ('./modelos/Nomina');
 const gastos = require ('./modelos/gastos');
 const ingresos = require('./modelos/ingresos');
+const CierreDia = require('./modelos/cierreDia');
 const Sucursal = require('./modelos/Sucursales');
 const { Op } = require('sequelize');
 
@@ -24,12 +28,50 @@ gastos.belongsTo(Sucursal, { foreignKey: 'idSucursal', as: 'sucursal' });
 Sucursal.hasMany(ingresos,{ foreignKey: 'idSucursal', as: 'ingresos' });
 ingresos.belongsTo(Sucursal,{ foreignKey: 'idSucursal', as: 'sucursal' });
 
+Sucursal.hasMany(CierreDia, { foreignKey: 'idSucursal', as: 'cierres' });
+CierreDia.belongsTo(Sucursal, { foreignKey: 'idSucursal', as: 'sucursal' });
+
 app.use(bodyParser.json());
 app.use(cors());
 
+const logger = (req, res, next) => {
+  try{
+    const urlObj = new URL(req.originalUrl, `http://${req.headers.host || 'localhost'}`);
+    urlObj.searchParams.delete('key');
+    const safeUrl = urlObj.pathname + (urlObj.search ? urlObj.search : '');
+    const log = `${new Date().toLocaleString()} - ${req.method} ${safeUrl}\n`;
+    const ruta = path.join(__dirname, 'log.txt');
+    fs.writeFileSync(ruta, log, { flag: 'a' });
+  }catch(_e){
+  }
+  next();
+};
+
+const validarApiKey = (req, res, next) => {
+  if (req.method === 'OPTIONS') return next();
+  if (!process.env.API_KEY) {
+    return res.status(500).json({
+      error: 'Configuración faltante',
+      message: 'API_KEY no está configurada en el servidor'
+    });
+  }
+
+  const apiKey = req.query.key || req.get('x-api-key');
+  if (apiKey && apiKey === process.env.API_KEY) return next();
+
+  return res.status(403).json({
+    error: 'Acceso prohibido',
+    message: 'Se require una API KEY válida'
+  });
+};
+
+app.use(logger);
+app.use('/API', validarApiKey);
+
 async function iniciarServidor(){
   try {
-    await sequelize.sync({ force: true });
+    const forceSync = String(process.env.DB_FORCE_SYNC ?? '').toLowerCase() === 'true';
+    await sequelize.sync({ force: forceSync });
     console.log(' Base de datos conectada y sincronizada');
     app.listen(port, () => {
       console.log(`Servidor iniciado en el puerto ${ port }`);
@@ -304,12 +346,13 @@ app.delete('/API/Gastos/:id', async (req, res) => {
 
 app.post('/API/Gastos', async (req, res) => {
   try{
-    const { fecha, monto, concepto, idSucursal } = req.body;
+    const { fecha, monto, concepto, idSucursal, metodoPago } = req.body;
     const nuevoGasto = await gastos.create({
       fecha: fecha,
       monto: monto,
       concepto: concepto,
-      idSucursal: idSucursal
+      idSucursal: idSucursal,
+      metodoPago: metodoPago ?? 'efectivo'
     });
     res.status(201).json(nuevoGasto);
   }catch(error){
@@ -428,12 +471,26 @@ app.get('/API/Ingresos', async (req,res) =>{
 
 app.post('/API/Ingresos', async (req,res) =>{
   try{
-    const { fecha, montoCuenta, montoEfectivo, idSucursal } = req.body;
-    const total = montoEfectivo + montoCuenta;
+    const {
+      fecha,
+      montoEfectivo,
+      montoTarjeta,
+      montoTransferencia,
+      // compat: payload viejo
+      montoCuenta,
+      idSucursal
+    } = req.body;
+
+    const efectivo = Number(montoEfectivo ?? 0);
+    const tarjeta = Number(montoTarjeta ?? 0);
+    const transferencia = Number(montoTransferencia ?? montoCuenta ?? 0);
+    const total = efectivo + tarjeta + transferencia;
+
     const nuevoIngreso = await ingresos.create({
       fecha: fecha,
-      montoCuenta: montoCuenta,
-      montoEfectivo: montoEfectivo,
+      montoEfectivo: efectivo,
+      montoTarjeta: tarjeta,
+      montoTransferencia: transferencia,
       total,
       idSucursal: idSucursal
     });
@@ -443,4 +500,224 @@ app.post('/API/Ingresos', async (req,res) =>{
   }
 });
 
+app.get('/API/CorteDia', async (req, res) => {
+  try{
+    const {
+      fecha,
+      idSucursal,
+      inicioEfectivo,
+      inicioCuenta,
+      fondoCaja
+    } = req.query;
+
+    if (!fecha) return res.status(400).json({ mensaje: 'Falta el parámetro fecha (YYYY-MM-DD)' });
+    if (!idSucursal) return res.status(400).json({ mensaje: 'Falta el parámetro idSucursal' });
+
+    const saldoInicialEfectivo = Number(inicioEfectivo ?? 0);
+    const saldoInicialCuenta = Number(inicioCuenta ?? 0);
+    const fondo = Number(fondoCaja ?? 0);
+
+    const [ing, eg] = await Promise.all([
+      ingresos.findAll({ where: { fecha, idSucursal } }),
+      gastos.findAll({ where: { fecha, idSucursal } })
+    ]);
+
+    const ingresosDesglose = ing.reduce((acc, i) => {
+      acc.efectivo += Number(i.montoEfectivo ?? 0);
+      acc.tarjeta += Number(i.montoTarjeta ?? 0);
+      acc.transferencia += Number(i.montoTransferencia ?? 0);
+      return acc;
+    }, { efectivo: 0, tarjeta: 0, transferencia: 0 });
+    ingresosDesglose.total = ingresosDesglose.efectivo + ingresosDesglose.tarjeta + ingresosDesglose.transferencia;
+
+    const egresosDesglose = eg.reduce((acc, g) => {
+      const metodo = (g.metodoPago ?? 'efectivo');
+      const monto = Number(g.monto ?? 0);
+      if (metodo === 'tarjeta') acc.tarjeta += monto;
+      else acc.efectivo += monto;
+      return acc;
+    }, { efectivo: 0, tarjeta: 0 });
+    egresosDesglose.total = egresosDesglose.efectivo + egresosDesglose.tarjeta;
+
+    const saldoFinalEfectivo = saldoInicialEfectivo + ingresosDesglose.efectivo - egresosDesglose.efectivo;
+    const saldoFinalCuenta = saldoInicialCuenta + ingresosDesglose.tarjeta + ingresosDesglose.transferencia - egresosDesglose.tarjeta;
+
+    res.json({
+      fecha,
+      idSucursal: Number(idSucursal),
+      inicio: { efectivo: saldoInicialEfectivo, cuenta: saldoInicialCuenta },
+      fondoCaja: fondo,
+      ingresos: ingresosDesglose,
+      egresos: egresosDesglose,
+      final: {
+        efectivo: saldoFinalEfectivo,
+        cuenta: saldoFinalCuenta,
+        efectivoDisponible: saldoFinalEfectivo - fondo
+      }
+    });
+  }catch(error){
+    res.status(500).json({ mensaje: 'Error al generar el corte', detalle: error.message });
+  }
+});
+
+app.get('/API/CorteDia/Inicio', async (req, res) => {
+  try{
+    const { fecha, idSucursal } = req.query;
+    if (!fecha) return res.status(400).json({ mensaje: 'Falta el parámetro fecha (YYYY-MM-DD)' });
+    if (!idSucursal) return res.status(400).json({ mensaje: 'Falta el parámetro idSucursal' });
+
+    const d = new Date(`${fecha}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return res.status(400).json({ mensaje: 'Fecha inválida' });
+    d.setDate(d.getDate() - 1);
+    const prev = d.toISOString().slice(0, 10);
+
+    const cierrePrev = await CierreDia.findOne({ where: { fecha: prev, idSucursal } });
+    if (!cierrePrev) {
+      return res.json({
+        fecha,
+        idSucursal: Number(idSucursal),
+        sugerido: { inicioEfectivo: 0, inicioCuenta: 0 },
+        basadoEn: null
+      });
+    }
+
+    return res.json({
+      fecha,
+      idSucursal: Number(idSucursal),
+      sugerido: {
+        inicioEfectivo: Number(cierrePrev.fondoCaja ?? 0),
+        inicioCuenta: Number(cierrePrev.finalCuenta ?? 0)
+      },
+      basadoEn: { fecha: prev, idCierre: cierrePrev.idCierre }
+    });
+  }catch(error){
+    res.status(500).json({ mensaje: 'Error al obtener inicio sugerido', detalle: error.message });
+  }
+});
+
+app.post('/API/CorteDia', async (req, res) => {
+  try{
+    const { fecha, idSucursal, inicioEfectivo, inicioCuenta, fondoCaja } = req.body;
+    if (!fecha) return res.status(400).json({ mensaje: 'Falta fecha (YYYY-MM-DD)' });
+    if (!idSucursal) return res.status(400).json({ mensaje: 'Falta idSucursal' });
+
+    const saldoInicialEfectivo = Number(inicioEfectivo ?? 0);
+    const saldoInicialCuenta = Number(inicioCuenta ?? 0);
+    const fondo = Number(fondoCaja ?? 0);
+
+    const [ing, eg] = await Promise.all([
+      ingresos.findAll({ where: { fecha, idSucursal } }),
+      gastos.findAll({ where: { fecha, idSucursal } })
+    ]);
+
+    const ingresosDesglose = ing.reduce((acc, i) => {
+      acc.efectivo += Number(i.montoEfectivo ?? 0);
+      acc.tarjeta += Number(i.montoTarjeta ?? 0);
+      acc.transferencia += Number(i.montoTransferencia ?? 0);
+      return acc;
+    }, { efectivo: 0, tarjeta: 0, transferencia: 0 });
+    const ingresosTotal = ingresosDesglose.efectivo + ingresosDesglose.tarjeta + ingresosDesglose.transferencia;
+
+    const egresosDesglose = eg.reduce((acc, g) => {
+      const metodo = (g.metodoPago ?? 'efectivo');
+      const monto = Number(g.monto ?? 0);
+      if (metodo === 'tarjeta') acc.tarjeta += monto;
+      else acc.efectivo += monto;
+      return acc;
+    }, { efectivo: 0, tarjeta: 0 });
+    const egresosTotal = egresosDesglose.efectivo + egresosDesglose.tarjeta;
+
+    const saldoFinalEfectivo = saldoInicialEfectivo + ingresosDesglose.efectivo - egresosDesglose.efectivo;
+    const saldoFinalCuenta = saldoInicialCuenta + ingresosDesglose.tarjeta + ingresosDesglose.transferencia - egresosDesglose.tarjeta;
+
+    if (fondo > saldoFinalEfectivo) {
+      return res.status(400).json({ mensaje: 'fondoCaja no puede ser mayor al efectivo final' });
+    }
+
+    const [registro, created] = await CierreDia.findOrCreate({
+      where: { fecha, idSucursal },
+      defaults: {
+        inicioEfectivo: saldoInicialEfectivo,
+        inicioCuenta: saldoInicialCuenta,
+        fondoCaja: fondo,
+        finalEfectivo: saldoFinalEfectivo,
+        finalCuenta: saldoFinalCuenta,
+        ingresosTotal,
+        egresosTotal
+      }
+    });
+
+    if (!created) {
+      await registro.update({
+        inicioEfectivo: saldoInicialEfectivo,
+        inicioCuenta: saldoInicialCuenta,
+        fondoCaja: fondo,
+        finalEfectivo: saldoFinalEfectivo,
+        finalCuenta: saldoFinalCuenta,
+        ingresosTotal,
+        egresosTotal
+      });
+    }
+
+    res.status(created ? 201 : 200).json({
+      mensaje: created ? 'Cierre creado' : 'Cierre actualizado',
+      data: registro
+    });
+  }catch(error){
+    res.status(500).json({ mensaje: 'Error al guardar el cierre', detalle: error.message });
+  }
+});
+
+app.get('/API/Validacion/Sucursal', async (req, res) => {
+  try{
+    const { fecha, inicio, fin, idSucursal } = req.query;
+    if (!idSucursal) return res.status(400).json({ mensaje: 'Falta idSucursal' });
+    if (!fecha && (!inicio || !fin)) {
+      return res.status(400).json({ mensaje: 'Manda fecha (YYYY-MM-DD) o inicio/fin (YYYY-MM-DD)' });
+    }
+
+    const whereBase = { idSucursal };
+    const whereFechas = fecha ? { fecha } : { fecha: { [Op.between]: [inicio, fin] } };
+
+    const [ing, eg] = await Promise.all([
+      ingresos.findAll({ where: { ...whereBase, ...whereFechas } }),
+      gastos.findAll({ where: { ...whereBase, ...whereFechas } })
+    ]);
+
+    const ingresosTotales = ing.reduce((acc, i) => {
+      acc.efectivo += Number(i.montoEfectivo ?? 0);
+      acc.tarjeta += Number(i.montoTarjeta ?? 0);
+      acc.transferencia += Number(i.montoTransferencia ?? 0);
+      return acc;
+    }, { efectivo: 0, tarjeta: 0, transferencia: 0 });
+    ingresosTotales.total = ingresosTotales.efectivo + ingresosTotales.tarjeta + ingresosTotales.transferencia;
+
+    const egresosTotales = eg.reduce((acc, g) => {
+      const metodo = (g.metodoPago ?? 'efectivo');
+      const monto = Number(g.monto ?? 0);
+      if (metodo === 'tarjeta') acc.tarjeta += monto;
+      else acc.efectivo += monto;
+      return acc;
+    }, { efectivo: 0, tarjeta: 0 });
+    egresosTotales.total = egresosTotales.efectivo + egresosTotales.tarjeta;
+
+    res.json({
+      idSucursal: Number(idSucursal),
+      filtro: fecha ? { fecha } : { inicio, fin },
+      conteo: { ingresos: ing.length, gastos: eg.length },
+      ingresos: ingresosTotales,
+      egresos: egresosTotales,
+      registros: {
+        ingresos: ing,
+        gastos: eg
+      }
+    });
+  }catch(error){
+    res.status(500).json({ mensaje: 'Error en validación', detalle: error.message });
+  }
+});
+
 iniciarServidor();
+
+
+

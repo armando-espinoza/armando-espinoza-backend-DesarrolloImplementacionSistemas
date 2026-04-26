@@ -17,6 +17,12 @@ const gastos = sequelize.define('gastos',{
     type: DataTypes.DECIMAL(10,2),
     allowNull: false
   },
+  metodoPago:{
+    type: DataTypes.ENUM('efectivo', 'tarjeta'),
+    allowNull: false,
+    defaultValue: 'efectivo',
+    field: 'metodo_pago'
+  },
   idSucursal:{
     type: DataTypes.INTEGER,
     allowNull: false,

@@ -13,13 +13,17 @@ const ingresos = sequelize.define('ingresos',{
     type: DataTypes.DATEONLY,
     field: 'fecha'
   },
-  montoCuenta:{
-    type: DataTypes.DECIMAL(10,2),
-    field: 'cuenta'
-  },
   montoEfectivo:{
     type: DataTypes.DECIMAL(10,2),
     field: 'efectivo'
+  },
+  montoTarjeta:{
+    type: DataTypes.DECIMAL(10,2),
+    field: 'tarjeta'
+  },
+  montoTransferencia:{
+    type: DataTypes.DECIMAL(10,2),
+    field: 'transferencia'
   },
   total:{
     type: DataTypes.DECIMAL(10,2)

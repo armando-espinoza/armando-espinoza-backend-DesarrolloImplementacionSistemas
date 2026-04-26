@@ -3,5 +3,6 @@ node_modules/
 
 .env
 
+backend/log.txt
 # Ignorar el frontend 
 frontend/
