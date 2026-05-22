@@ -1,0 +1,352 @@
+.fin-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.fin-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.fin-titulo {
+  font-size: 22px;
+  font-weight: 600;
+  color: #e8e8e8;
+  margin: 0;
+}
+
+.fin-subtitulo {
+  font-size: 13px;
+  color: #555;
+  margin: 4px 0 0;
+}
+
+.fin-btn-nueva {
+  background: #e8003a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.fin-btn-nueva:hover { background: #c0002e; }
+
+/* KPIs */
+.fin-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .fin-kpis { grid-template-columns: repeat(2, 1fr); }
+}
+
+.fin-kpi {
+  background: #161616;
+  border: 1px solid #dd1212;
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.fin-kpi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.fin-kpi-label {
+  font-size: 11px;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fin-kpi-icono { font-size: 18px; }
+
+.fin-kpi-valor {
+  font-size: 24px;
+  font-weight: 700;
+  color: #e8e8e8;
+  margin: 0 0 4px;
+}
+
+.fin-kpi-cambio {
+  font-size: 12px;
+  margin: 0;
+}
+.fin-kpi-cambio.pos { color: #00cc66; }
+.fin-kpi-cambio.neg { color: #ff4444; }
+
+/* Grid 2 columnas */
+.fin-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 800px) {
+  .fin-grid-2 { grid-template-columns: 1fr; }
+}
+
+/* Card genérico */
+.fin-card {
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.fin-card-titulo {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e8e8e8;
+  margin: 0;
+}
+
+.fin-card-sub {
+  font-size: 12px;
+  color: #555;
+  margin: 4px 0 16px;
+}
+
+/* Barras egresos */
+.fin-barras {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fin-barra-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fin-barra-label {
+  font-size: 15px;
+  color: #ffffff;
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.fin-barra-track {
+  flex: 1;
+  background: #1e1e1e;
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.fin-barra-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.fin-barra-monto {
+  font-size: 12px;
+  color: #ccc;
+  width: 70px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Flujo de caja */
+.fin-flujo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fin-flujo-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #111;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.fin-flujo-icon {
+  font-size: 20px;
+  font-weight: 700;
+  width: 32px;
+  text-align: center;
+}
+.fin-flujo-item.ingreso .fin-flujo-icon { color: #00cc66; }
+.fin-flujo-item.egreso .fin-flujo-icon { color: #ff4444; }
+
+.fin-flujo-label {
+  font-size: 11px;
+  color: #555;
+  margin: 0;
+}
+
+.fin-flujo-monto {
+  font-size: 18px;
+  font-weight: 700;
+  color: #e8e8e8;
+  margin: 2px 0 0;
+}
+
+.fin-flujo-neto {
+  background: #ee000011;
+  border: 1px solid #e8003a33;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.fin-flujo-neto-monto {
+  font-size: 24px;
+  font-weight: 700;
+  color: #e8e8e8;
+  margin: 4px 0 0;
+}
+
+/* Tabla */
+.fin-tabla-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fin-filtros { display: flex; gap: 6px; }
+
+.fin-filtro-btn {
+  background: #1e1e1e;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  padding: 6px 14px;
+  color: #888;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.fin-filtro-btn.activo,
+.fin-filtro-btn:hover {
+  background: #e8003a22;
+  border-color: #e8003a;
+  color: #e8003a;
+}
+
+.fin-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.fin-tabla thead tr { border-bottom: 1px solid #2a2a2a; }
+
+.fin-tabla th {
+  text-align: left;
+  padding: 10px 12px;
+  color: #555;
+  font-weight: 500;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fin-tabla tbody tr {
+  border-bottom: 1px solid #1e1e1e;
+  transition: background 0.15s;
+}
+.fin-tabla tbody tr:hover { background: #1e1e1e; }
+.fin-tabla td { padding: 11px 12px; color: #ccc; }
+
+.fin-badge-cat {
+  background: #2a2a2a;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  color: #888;
+}
+
+.fin-fecha { color: #555; }
+
+.fin-tipo {
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.fin-tipo.ingreso { background: #00ff8822; color: #00cc66; }
+.fin-tipo.egreso { background: #ff000022; color: #ff4444; }
+
+.fin-monto { font-weight: 700; }
+.fin-monto.ingreso { color: #00cc66; }
+.fin-monto.egreso { color: #ff4444; }
+
+/* Modal */
+.fin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: #00000088;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.fin-modal {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 28px;
+  width: 360px;
+}
+
+.fin-modal-titulo {
+  font-size: 16px;
+  font-weight: 600;
+  color: #e8e8e8;
+  margin: 0 0 20px;
+}
+
+.fin-modal-campos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.fin-input {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 9px 14px;
+  color: #e8e8e8;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.fin-input:focus { border-color: #e8003a; }
+
+.fin-modal-botones {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.fin-btn-cancelar {
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #888;
+  font-size: 13px;
+  cursor: pointer;
+}
+.fin-btn-cancelar:hover { border-color: #444; color: #ccc; }

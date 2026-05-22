@@ -1,0 +1,73 @@
+/* LogoSanji.css */
+
+/* Contenedor principal */
+.sanji-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Espacio entre isotipo y texto */
+  user-select: none;
+}
+
+/* Solo isotipo central (usado en login) */
+.sanji-mode-central {
+  flex-direction: column;
+  text-align: center;
+}
+
+/* --- ISOTIPO (Círculo y Salmón) --- */
+.sanji-isotipo {
+  width: var(--sanji-size);
+  height: var(--sanji-size);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sanji-circulo-blanco {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #f1f1f1; /* Círculo blanco original */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.sanji-grafico-salmon {
+  width: 70%; /* El salmón ocupa el 70% del círculo */
+  height: 70%;
+}
+
+.salmon-fill {
+  fill: #e8003a; /* Tu color rojo/salmón original */
+}
+
+/* --- TEXTO (SANJI ROLL + Sub) --- */
+.sanji-text-group {
+  display: flex;
+  flex-direction: column;
+  color: #f1f1f1; /* Texto blanco en modo oscuro */
+}
+
+.sanji-brand-name {
+  font-family: 'Playfair Display', 'Georgia', serif; /* Tu fuente serif elegante */
+  font-weight: 400;
+  font-size: 1.8rem;
+  letter-spacing: 0.15em; /* Espaciado original */
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.sanji-brand-name .brand-suffix {
+  font-size: 1.6rem;
+}
+
+.sanji-brand-sub {
+  font-family: 'Noto Sans JP', 'Arial', sans-serif; /* Fuente japonesa nítida */
+  font-weight: 300;
+  font-size: 0.8rem;
+  color: #aaa; /* Gris sutil */
+  margin: 0;
+  margin-top: -4px;
+}

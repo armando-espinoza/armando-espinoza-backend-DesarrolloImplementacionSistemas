@@ -1,9 +1,10 @@
-const express = require('express'); 
 const bodyParser = require('body-parser'); 
+const express = require('express'); 
 const cors = require('cors'); 
 require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+const jwt = require('jsonwebtoken');
 const sequelize = require('./database'); 
 const port = 1919;
 const app = express();
@@ -13,8 +14,12 @@ const gastos = require ('./modelos/gastos');
 const ingresos = require('./modelos/ingresos');
 const CierreDia = require('./modelos/cierreDia');
 const Sucursal = require('./modelos/Sucursales');
+const Usuario = require('./modelos/Usuarios');
 const { Op } = require('sequelize');
 
+
+Usuario.hasMany(Sucursal, { foreignKey: 'idUsuario', as: 'sucursales' });
+Sucursal.belongsTo(Usuario, { foreignKey: 'idUsuario', as: 'usuario' });
 
 Empleado.hasMany(Nomina,{ foreignKey: 'idEmpleado', as: 'nominas' });
 Nomina.belongsTo(Empleado,{ foreignKey: 'idEmpleado', as: 'empleado' });
@@ -37,7 +42,6 @@ app.use(cors());
 const logger = (req, res, next) => {
   try{
     const urlObj = new URL(req.originalUrl, `http://${req.headers.host || 'localhost'}`);
-    urlObj.searchParams.delete('key');
     const safeUrl = urlObj.pathname + (urlObj.search ? urlObj.search : '');
     const log = `${new Date().toLocaleString()} - ${req.method} ${safeUrl}\n`;
     const ruta = path.join(__dirname, 'log.txt');
@@ -47,26 +51,81 @@ const logger = (req, res, next) => {
   next();
 };
 
-const validarApiKey = (req, res, next) => {
+const validarToken = (req, res, next) => {
   if (req.method === 'OPTIONS') return next();
-  if (!process.env.API_KEY) {
+
+  if (!process.env.JWT_SECRET) {
     return res.status(500).json({
       error: 'Configuración faltante',
-      message: 'API_KEY no está configurada en el servidor'
+      message: 'JWT_SECRET no está configurada en el servidor'
     });
   }
 
-  const apiKey = req.query.key || req.get('x-api-key');
-  if (apiKey && apiKey === process.env.API_KEY) return next();
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      error: 'No autorizado',
+      message: 'Se requiere un token de autenticación'
+    });
+  }
 
-  return res.status(403).json({
-    error: 'Acceso prohibido',
-    message: 'Se require una API KEY válida'
-  });
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.usuario = payload;
+    return next();
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expirado', message: 'Inicia sesión nuevamente' });
+    }
+    return res.status(403).json({ error: 'Token inválido', message: 'El token proporcionado no es válido' });
+  }
 };
 
 app.use(logger);
-app.use('/API', validarApiKey);
+app.use('/API', validarToken);
+
+app.post('/auth/login', async (req, res) => {
+  try {
+    const { usuario, password } = req.body;
+
+    if (!usuario || !password) {
+      return res.status(400).json({ mensaje: 'Se requieren usuario y contraseña' });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ mensaje: 'JWT_SECRET no configurado en el servidor' });
+    }
+
+    const usuarioEncontrado = await Usuario.findOne({ 
+      where: { nombreUsuario: usuario } 
+    });
+
+    if (!usuarioEncontrado || usuarioEncontrado.contrasnaUsuario !== password) {
+      return res.status(401).json({ mensaje: 'Credenciales incorrectas' });
+    }
+
+    const payload = {
+      idUsuario: usuarioEncontrado.idUsuario,
+      usuario: usuarioEncontrado.nombreUsuario 
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
+
+    res.json({ 
+      token, 
+      usuario: {
+        idUsuario: payload.idUsuario,
+        usuario: payload.usuario
+      } 
+    });
+
+  } catch (error) {
+    res.status(500).json({ mensaje: 'Error al iniciar sesión', detalle: error.message });
+  }
+});
+
 
 async function iniciarServidor(){
   try {
@@ -329,10 +388,6 @@ app.get('/API/Gastos/:id', async (req, res) => {
   }
 });
 
-
-
-
-
 app.delete('/API/Gastos/:id', async (req, res) => {
   try{
     const filasBorradas = await gastos.destroy({ where: { idGasto: req.params.id } });
@@ -359,6 +414,7 @@ app.post('/API/Gastos', async (req, res) => {
     res.status(500).json({ mensaje: 'No se pudo registrar el gasto', detalle: error.message });
   }
 });
+
 app.get('/API/Gastos', async (req,res) =>{
   try{
     const listarGastos = await gastos.findAll();
@@ -476,7 +532,6 @@ app.post('/API/Ingresos', async (req,res) =>{
       montoEfectivo,
       montoTarjeta,
       montoTransferencia,
-      // compat: payload viejo
       montoCuenta,
       idSucursal
     } = req.body;
@@ -718,6 +773,3 @@ app.get('/API/Validacion/Sucursal', async (req, res) => {
 });
 
 iniciarServidor();
-
-
-

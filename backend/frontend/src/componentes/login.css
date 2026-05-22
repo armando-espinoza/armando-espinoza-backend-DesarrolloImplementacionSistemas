@@ -1,0 +1,334 @@
+/* ============================================================
+   SANJI — Login · 売上管理
+   Paleta: #0f0f0f bg · #1a1a1a card · #E8303A rojo · #C9870A ámbar
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Variables ─────────────────────────────────────────── */
+:root {
+  --bg:        #0f0f0f;
+  --card:      #161616;
+  --card-2:    #1c1c1c;
+  --border:    rgba(255,255,255,.07);
+  --red:       #E8303A;
+  --amber:     #C9870A;
+  --red-glow:  rgba(232,48,58,.18);
+  --amber-glow:rgba(201,135,10,.14);
+  --text:      #f0f0f0;
+  --muted:     #5a5a5a;
+  --muted-2:   #3a3a3a;
+}
+
+/* ── Fondo ─────────────────────────────────────────────── */
+.lg-bg {
+  min-height: 100vh;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 55% 45% at 15% 25%, var(--red-glow)   0%, transparent 65%),
+    radial-gradient(ellipse 45% 40% at 85% 80%, var(--amber-glow) 0%, transparent 60%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Sans', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Textura de ruido sutil */
+.lg-noise {
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Barra lateral de acento */
+.lg-side-bar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    var(--red)   30%,
+    var(--amber) 70%,
+    transparent 100%);
+  opacity: .6;
+  z-index: 1;
+}
+
+/* ── Card ──────────────────────────────────────────────── */
+.lg-card {
+  position: relative;
+  z-index: 2;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: linear-gradient(160deg, var(--card-2) 0%, var(--card) 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 44px 42px 38px;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.02),
+    0 24px 64px rgba(0,0,0,.7),
+    0 0 40px var(--red-glow);
+  animation: cardIn .5s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(24px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);   }
+}
+
+/* Línea superior rojo → ámbar */
+.lg-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 70%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--red), var(--amber), transparent);
+  border-radius: 1px;
+}
+
+/* ── Marca ─────────────────────────────────────────────── */
+.lg-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.lg-brand-icon {
+  width: 44px; height: 44px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 8px var(--red-glow));
+  animation: iconPulse 3.5s ease-in-out infinite;
+}
+.lg-brand-icon svg { width: 100%; height: 100%; }
+
+@keyframes iconPulse {
+  0%,100% { filter: drop-shadow(0 0 6px rgba(232,48,58,.25)); }
+  50%      { filter: drop-shadow(0 0 16px rgba(232,48,58,.55)); }
+}
+
+.lg-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.lg-brand-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  background: linear-gradient(90deg, var(--red), var(--amber));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.lg-brand-kanji {
+  font-size: 10px;
+  letter-spacing: .18em;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+/* ── Divisor ───────────────────────────────────────────── */
+.lg-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin-bottom: 24px;
+}
+
+/* ── Encabezado ────────────────────────────────────────── */
+.lg-header { margin-bottom: 28px; }
+
+.lg-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.lg-sub {
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--muted);
+  letter-spacing: .04em;
+}
+
+/* ── Campos ────────────────────────────────────────────── */
+.lg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lg-field { display: flex; flex-direction: column; gap: 6px; }
+
+.lg-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color .2s;
+}
+.lg-field.active .lg-label { color: var(--red); }
+
+.lg-input-wrap {
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+}
+.lg-field.active .lg-input-wrap {
+  background: rgba(232,48,58,.04);
+  border-color: rgba(232,48,58,.4);
+  box-shadow: 0 0 0 3px rgba(232,48,58,.07);
+}
+
+.lg-ico {
+  width: 16px; height: 16px;
+  margin: 0 12px;
+  flex-shrink: 0;
+  color: var(--muted-2);
+  transition: color .2s;
+}
+.lg-field.active .lg-ico { color: var(--red); }
+
+.lg-input {
+  flex: 1;
+  padding: 12px 14px 12px 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  caret-color: var(--red);
+}
+.lg-input::placeholder { color: var(--muted-2); }
+
+/* Línea de foco inferior */
+.lg-underline {
+  height: 1px;
+  background: linear-gradient(90deg, var(--red), var(--amber));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .3s cubic-bezier(.22,1,.36,1);
+  border-radius: 1px;
+}
+.lg-field.active .lg-underline { transform: scaleX(1); }
+
+/* ── Botón ─────────────────────────────────────────────── */
+.lg-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 13px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(110deg, var(--red) 0%, #c0282f 40%, var(--amber) 100%);
+  background-size: 200% 100%;
+  background-position: 0% 0%;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  color: #fff;
+  cursor: pointer;
+  transition: background-position .4s ease, box-shadow .25s, transform .15s;
+  box-shadow: 0 4px 18px rgba(232,48,58,.3);
+}
+.lg-btn:hover:not(:disabled) {
+  background-position: 100% 0%;
+  box-shadow: 0 6px 26px rgba(232,48,58,.45);
+  transform: translateY(-1px);
+}
+.lg-btn:active:not(:disabled) { transform: translateY(0); }
+.lg-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+.lg-arrow {
+  width: 16px; height: 16px;
+  transition: transform .22s;
+}
+.lg-btn:hover .lg-arrow { transform: translateX(4px); }
+
+.lg-spinner {
+  width: 17px; height: 17px;
+  border: 2px solid rgba(255,255,255,.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin .65s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Footer ────────────────────────────────────────────── */
+.lg-footer {
+  margin-top: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.lg-link {
+  background: none;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color .2s;
+  letter-spacing: .02em;
+}
+.lg-link:hover { color: #9a9a9a; }
+
+.lg-link--accent { color: var(--red); font-weight: 500; }
+.lg-link--accent:hover { color: var(--amber); }
+
+.lg-dot { color: var(--muted-2); font-size: 14px; user-select: none; }
+
+/* ── Tag versión ───────────────────────────────────────── */
+.lg-version {
+  position: fixed;
+  bottom: 18px;
+  right: 22px;
+  font-size: 10px;
+  letter-spacing: .12em;
+  color: var(--muted-2);
+  z-index: 2;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .lg-card { padding: 34px 26px 30px; }
+  .lg-brand-name { font-size: 22px; }
+  .lg-title { font-size: 19px; }
+}
+
+.login-mensaje-admin {
+  color: #888; /* Un gris tenue para no distraer del botón principal */
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 15px; /* Espacio para que no quede pegado al botón */
+}
+

@@ -1,8 +1,8 @@
-const { DataTypes } = require ('sequelize');
-const sequelize = require ('../database');
+const { DataTypes } = require('sequelize');
+const sequelize = require('../database');
 
-const Sucursal = sequelize.define('Sucursal',{
-  idSucursal:{
+const Sucursal = sequelize.define('Sucursal', {
+  idSucursal: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
@@ -15,6 +15,15 @@ const Sucursal = sequelize.define('Sucursal',{
   direccion: {
     type: DataTypes.STRING,
     allowNull: false
+  },
+  idUsuario: {
+    type: DataTypes.INTEGER,
+    allowNull: true, 
+    field: 'id_usuario',
+    references: {
+      model: 'Usuario',
+      key: 'idUsuario'
+    }
   }
 }, {
   tableName: 'sucursales',
