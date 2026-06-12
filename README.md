@@ -25,8 +25,8 @@ Servidor:
 Todas las rutas bajo `/API/*` requieren API key.
 
 Envíala como:
-- Query param: `?key=TU_API_KEY`
-- Header: `x-api-key: TU_API_KEY`
+- Query param: `?key=API_KEY`
+- Header: `x-api-key:API_KEY`
 
 ### Documentación para frontend
 Ver `API_FRONTEND.md`.
